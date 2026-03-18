@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Festival Wishing Terminal 🚀</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* --- बेसिक सेटिंग --- */
+        body {
+            background-color: #0d1117; 
+            color: #c9d1d9;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.8s ease;
+            overflow-x: hidden;
+        }
+
+        /* --- मुख्य कंटेनर --- */
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background: #161b22;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #30363d;
+            text-align: center;
+            margin: 20px auto;
+        }
+
+        h1 { color: #58a6ff; font-size: 1.5rem; text-transform: uppercase; }
+
+        .terminal-line {
+            border: 0;
+            height: 1px;
+            background-image: linear-gradient(to right, transparent, #30363d, transparent);
+            margin: 20px 0;
+        }
+
+        /* --- इनपुट बॉक्स और फॉर्म --- */
+        .input-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-size: 0.9rem; color: #8b949e; margin-bottom: 5px; }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #32ff7e; 
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+
+        input:focus { border-color: #58a6ff; outline: none; }
+
+        /* --- बटन स्टाइल --- */
+        .btn-main {
+            width: 100%;
+            background-color: #238636;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* --- टाइमर और कार्ड --- */
+        .terminal-timer { background: #000; color: #32ff7e; padding: 15px; border: 1px dashed #32ff7e; margin: 20px 0; }
+        #timer span { color: #fffa65; font-weight: bold; }
+
+        .card {
+            background: #ffffff;
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 30px;
+            animation: fadeIn 1s ease;
+        }
+
+        #displayImg { max-width: 100%; height: auto; border-radius: 8px; margin: 15px 0; }
+
+        .btn-copy { background: #3498db; border: none; padding: 10px; color: white; border-radius: 5px; cursor: pointer; }
+
+        .btn-wa { background-color: #25D366; color: white; width: 100%; padding: 12px; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer; font-weight: bold;}
+        .btn-fb { background-color: #1877F2; color: white; width: 100%; padding: 12px; border: none; border-radius: 5px; margin-top: 10px; cursor: pointer; font-weight: bold;}
+
+        /* --- एनिमेशन लेयर --- */
+        #animation-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 99; }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh); opacity: 1; }
+            100% { transform: translateY(-10vh); opacity: 0; }
+        }
+        .floating-item { position: absolute; font-size: 2rem; animation: floatUp 5s linear infinite; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="animation-overlay"></div>
+
+    <div class="container">
+        <header>
+            <h1>🚩 उत्सव विशिंग टर्मिनल 🚩</h1>
+            <p>अपना कस्टमाइज्ड विशिंग कार्ड बनाएं</p>
+        </header>
+
+        <hr class="terminal-line">
+
+        <div class="form-section">
+            <div class="input-group">
+                <label>> अपना नाम दर्ज करें:</label>
+                <input type="text" id="userName" placeholder="आपका नाम...">
+            </div>
+
+            <div class="input-group">
+                <label>> त्योहार का नाम (Auto-Theme):</label>
+                <input type="text" id="festName" placeholder="Diwali, Holi, Eid..." onkeyup="autoTheme()">
+            </div>
+
+            <div class="input-group">
+                <label>> मैन्युअल कलर चुनें:</label>
+                <input type="color" id="manualColor" onchange="manualTheme(this.value)">
+            </div>
+
+            <div class="input-group">
+                <label>> संदेश लिखें:</label>
+                <textarea id="wishMessage" placeholder="अपनी दिल की बात लिखें..."></textarea>
+            </div>
+
+            <div class="input-group">
+                <label>> फोटो URL (Direct Link):</label>
+                <input type="text" id="imgUrl" placeholder="https://example.com/image.jpg">
+            </div>
+
+            <div class="input-group">
+                <label>> म्यूजिक URL (MP3 Link):</label>
+                <input type="text" id="musicUrl" placeholder="https://example.com/music.mp3">
+            </div>
+
+            <button class="btn-main" onclick="generateWish()">कार्ड जेनरेट करें & सेव करें ⚡</button>
+        </div>
+
+        <div id="countdown-box" class="terminal-timer" style="display:none;">
+            <p id="timer-text">आने में समय बाकी है:</p>
+            <div id="timer">
+                <span id="days">00</span> दिन | 
+                <span id="hours">00</span> घंटे | 
+                <span id="mins">00</span> मिनट | 
+                <span id="secs">00</span> सेकंड
+            </div>
+        </div>
+
+        <div id="shareSection" style="display:none; margin-top:20px; background: #21262d; padding: 15px; border-radius: 8px;">
+            <p>आपका यूनिक लिंक तैयार है:</p>
+            <input type="text" id="shareURL" readonly style="width:70%;">
+            <button onclick="copyToClipboard()" class="btn-copy">कॉपी करें 📋</button>
+        </div>
+
+        <div id="wishCard" class="card" style="display:none;">
+            <h2 id="displayFest"></h2>
+            <img id="displayImg" src="" alt="Festival Image">
+            <p id="displayMsg"></p>
+            <h3 id="displayName"></h3>
+            
+            <audio id="bgMusic" controls style="width:100%; margin-top:10px;">
+                <source src="" type="audio/mpeg">
+            </audio>
+
+            <div class="social-share">
+                <button class="btn-wa" onclick="shareWhatsApp()">WhatsApp पर भेजें 🟢</button>
+                <button class="btn-fb" onclick="shareFacebook()">Facebook पर शेयर करें 🔵</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. Firebase Config (अपनी डिटेल्स यहाँ भरें) ---
+        const firebaseConfig = {// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyARBeG1o0EpjEZBn_jhiSmGCb1BTjOLb0U",
+  authDomain: "mywishingapp.firebaseapp.com",
+  projectId: "mywishingapp",
+  storageBucket: "mywishingapp.firebasestorage.app",
+  messagingSenderId: "1027937571326",
+  appId: "1:1027937571326:web:02e5416ef002c10eb570af"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // --- 2. त्योहारों का डेटा ---
+        const festivalData = {
+            "diwali": { bg: "#FF8C00", date: "Oct 20, 2026 00:00:00", emoji: "🪔" },
+            "holi": { bg: "#FF4081", date: "March 3, 2026 00:00:00", emoji: "🌈" },
+            "eid": { bg: "#2E7D32", date: "March 20, 2026 00:00:00", emoji: "🌙" },
+            "christmas": { bg: "#C62828", date: "Dec 25, 2026 00:00:00", emoji: "🎄" }
+        };
+
+        let timerInterval;
+
+        function autoTheme() {
+            const fest = document.getElementById('festName').value.toLowerCase();
+            const theme = festivalData[fest];
+            if (theme) {
+                document.body.style.backgroundColor = theme.bg;
+                document.getElementById('countdown-box').style.display = "block";
+                startTimer(theme.date);
+                startFloatingAnimation(theme.emoji);
+            }
+        }
+
+        function manualTheme(color) { document.body.style.backgroundColor = color; }
+
+        function startTimer(targetDate) {
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                const distance = new Date(targetDate).getTime() - new Date().getTime();
+                document.getElementById("days").innerText = Math.floor(distance / (1000 * 60 * 60 * 24));
+                document.getElementById("hours").innerText = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById("mins").innerText = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById("secs").innerText = Math.floor((distance % (1000 * 60)) / 1000);
+            }, 1000);
+        }
+
+        function generateWish() {
+            const data = {
+                name: document.getElementById('userName').value,
+                fest: document.getElementById('festName').value,
+                msg: document.getElementById('wishMessage').value,
+                img: document.getElementById('imgUrl').value,
+                music: document.getElementById('musicUrl').value
+            };
+
+            const newRef = database.ref('wishes').push();
+            newRef.set(data).then(() => {
+                const link = window.location.origin + window.location.pathname + "?id=" + newRef.key;
+                document.getElementById('shareURL').value = link;
+                document.getElementById('shareSection').style.display = "block";
+                renderCard(data);
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            });
+        }
+
+        function renderCard(data) {
+            document.getElementById('displayFest').innerText = "शुभ " + data.fest;
+            document.getElementById('displayMsg').innerText = data.msg;
+            document.getElementById('displayName').innerText = "प्रेषक: " + data.name;
+            document.getElementById('displayImg').src = data.img;
+            const audio = document.getElementById('bgMusic');
+            audio.src = data.music;
+            audio.play();
+            document.getElementById('wishCard').style.display = "block";
+        }
+
+        function copyToClipboard() {
+            document.getElementById("shareURL").select();
+            document.execCommand("copy");
+            alert("लिंक कॉपी हो गया!");
+        }
+
+        function shareWhatsApp() {
+            window.open(`https://wa.me/?text=Check this wish: ${document.getElementById("shareURL").value}`, '_blank');
+        }
+
+        function startFloatingAnimation(emoji) {
+            const overlay = document.getElementById('animation-overlay');
+            overlay.innerHTML = '';
+            for (let i = 0; i < 15; i++) {
+                let span = document.createElement('span');
+                span.innerText = emoji; span.className = 'floating-item';
+                span.style.left = Math.random() * 100 + "vw";
+                span.style.animationDelay = Math.random() * 5 + "s";
+                overlay.appendChild(span);
+            }
+        }
+
+        window.onload = function() {
+            const id = new URLSearchParams(window.location.search).get('id');
+            if (id) {
+                database.ref('wishes/' + id).once('value').then((snapshot) => {
+                    if (snapshot.exists()) renderCard(snapshot.val());
+                });
+            }
+        };
+    </script>
+</body>
+</html>

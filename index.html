@@ -187,13 +187,24 @@
     </div>
 
     <script>
-        // --- 1. Firebase Config (अपनी डिटेल्स यहाँ भरें) ---
-        const firebaseConfig = {// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-// Your web app's Firebase configuration
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyARBeG1o0EpjEZBn_jhiSmGCb1BTjOLLIU",
+    authDomain: "mywishingapp.firebaseapp.com",
+    databaseURL: "https://mywishingapp-default-rtdb.firebaseio.com",
+    projectId: "mywishingapp",
+    storageBucket: "mywishingapp.appspot.com",
+    messagingSenderId: "1027937571326",
+    appId: "1:1027937571326:web:02e5416ef002c10eb570af"
+  };
+
+  // Firebase को शुरू करें
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+
 const firebaseConfig = {
   apiKey: "AIzaSyARBeG1o0EpjEZBn_jhiSmGCb1BTjOLb0U",
   authDomain: "mywishingapp.firebaseapp.com",
